@@ -7,18 +7,19 @@ import { MoviesModule } from './movies/movies.module';
 import { WatchListModule } from './watch-list/watch-list.module';
 import { TmdbModule } from './tmdb/tmdb.module';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ConfigModule } from '@nestjs/config';
-
-const mongoUri = process.env.MONGO_URI;
-if (!mongoUri) {
-  throw new Error('MONGO_URI environment variable is required');
-}
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
 
-    MongooseModule.forRoot(mongoUri),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        uri: config.get<string>('MONGO_URI')!,
+      }),
+    }),
 
     AuthModule,
     UsersModule,
